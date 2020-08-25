@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
+using System.IO;
+using System.Diagnostics;
 using Siemens.Engineering;
 using Siemens.Engineering.AddIn.Menu;
 using System.Linq;
 using System.Windows.Forms;
+using MultiArchiver.Utility;
+using Microsoft.VisualBasic.FileIO;
 
 namespace MultiArchiver
 {
@@ -13,40 +18,163 @@ namespace MultiArchiver
         private readonly TiaPortal _tiaPortal;
         private readonly Settings _settings;
 
-        public AddIn(TiaPortal tiaPortal) : base("Example Add-In")
+        private string projectName;
+
+        //private ProjectSettings projectSettings;
+
+        private readonly string _traceFilePath;
+        private const string searchPhrase = "MultiArchiver:";
+
+        public AddIn(TiaPortal tiaPortal) : base("MultiArchiver")
         {
             _tiaPortal = tiaPortal;
-            _settings = Settings.Load();
+
+            projectName = _tiaPortal.Projects.First().Name;
+
+            var assemblyName = Assembly.GetCallingAssembly().GetName();
+            var logDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TIA Add-Ins", assemblyName.Name, assemblyName.Version.ToString(), "Logs");
+            var logDirectory = Directory.CreateDirectory(logDirectoryPath);
+            _traceFilePath = Path.Combine(logDirectory.FullName, string.Concat(DateTime.Now.ToString("yyyyMMdd"), ".txt"));
+
+            var settingsDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TIA Add-Ins", assemblyName.Name, assemblyName.Version.ToString());
+            var settingsDirectory = Directory.CreateDirectory(settingsDirectoryPath);
+
+            _settings = Settings.Load(settingsDirectory);
+            //projectSettings = new ProjectSettings();
+
+            WriteLog("Add-in constructed");
         }
 
         protected override void BuildContextMenuItems(ContextMenuAddInRoot addInRootSubmenu)
         {
-            addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Selection info", OnClick, DisplayStatus);
-            Submenu settingsSubmenu = addInRootSubmenu.Items.AddSubmenu("Settings");
-            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Check Box", _settings.CheckBoxOnClick, _settings.CheckBoxDisplayStatus);
-            settingsSubmenu.Items.AddActionItemWithRadioButton<IEngineeringObject>("Radio Button 1", _settings.RadioButton1OnClick, _settings.RadioButton1DisplayStatus);
-            settingsSubmenu.Items.AddActionItemWithRadioButton<IEngineeringObject>("Radio Button 2", _settings.RadioButton2OnClick, _settings.RadioButton2DisplayStatus);
+
+            WriteLog("Building context menu");
+
+            addInRootSubmenu.Items.AddActionItem<Project>("Archive Project", ArchiveOnClick); //Main funtion
+            addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Please select the project.", menuSelectionProvider => { }, InfoTextStatus);
+
+            Submenu settingsSubmenu = addInRootSubmenu.Items.AddSubmenu("Settings"); //Settings submenu
+            settingsSubmenu.Items.AddActionItem<IEngineeringObject>("List paths", ListPathsOnClick);
+            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Move old files to the Archive folder", _settings.MoveOldFilesOnClick, _settings.MoveOldFilesDisplayStatus);
+            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Debug mode", _settings.DebugOnClick, _settings.DebugDisplayStatus);
         }
 
-        private void OnClick(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider)
+        private void ArchiveOnClick(MenuSelectionProvider menuSelectionProvider)
         {
-            // TODO: Replace this with your own on click logic
 
-            string projectName = _tiaPortal.Projects.First(project => project.IsPrimary).Name;
-            List<IEngineeringObject> selectedObjects = menuSelectionProvider.GetSelection<IEngineeringObject>().ToList();
-            string selectedObjectNames = string.Join(Environment.NewLine, selectedObjects.Select(selection => (string) selection.GetAttribute("Name")));
+            List<DirectoryInfo> paths, pathsDone, pathsError;
+            paths = Util.LoadDirectories(Util.ReadProjectComment(_tiaPortal, searchPhrase));
+            pathsDone = new List<DirectoryInfo>();
+            pathsError = new List<DirectoryInfo>();
 
-            string message = string.Format(CultureInfo.InvariantCulture, "Project name: {0}\r\nSelection:\r\n{1}", projectName, selectedObjectNames);
-            string title = "TIA Add-In: Selection info";
+            Project project = _tiaPortal.Projects.First();
+
+            string archiveName = String.Format("{0}_{1}.zap16", project.Name, DateTime.Now.ToString("yyyyMMdd_HHmm"));
+
+            //Save Project
+            project.Save();
+
+            using (var exclusiveAccess = _tiaPortal.ExclusiveAccess("Archiving to " + paths.Count + " folders..."))
+            {
+                using (var transaction = exclusiveAccess.Transaction(project, "Archive project"))
+                {
+
+                    var showMessageBox = false;
+                    string sourceFile = "", targetFile;
+
+                    foreach (DirectoryInfo path in paths)
+                    {
+                        if (path.Exists)
+                        {
+                            //Paths exists, begin arcive
+                            if (_settings.MoveOldFiles)
+                            {
+                                //TODO: Move old files to the "Archive" folder
+                            }
+
+                            if (pathsDone.Count == 0)
+                            {
+                                exclusiveAccess.Text = "Archiving to: " + path.FullName;
+                                //Archive to the first path
+                                project.Archive(path, archiveName, ProjectArchivationMode.DiscardRestorableDataAndCompressed);
+                                sourceFile = Path.Combine(path.FullName, archiveName);
+                                WriteLog("Archive: " + sourceFile);
+                            }
+                            else
+                            {
+                                exclusiveAccess.Text = "Copy archive to: " + path.FullName;
+                                //Copy from the first archive
+                                targetFile = Path.Combine(path.FullName, archiveName);
+                                FileSystem.CopyFile(sourceFile, targetFile, UIOption.AllDialogs);
+                                WriteLog("Copy to: " + targetFile);
+                            }
+
+                            pathsDone.Add(path);
+                        }
+                        else
+                        {
+                            //not found/incorrect
+                            showMessageBox = true;
+                            pathsError.Add(path);
+                            WriteLog("Not found: " + path.FullName);
+                        }
+                    }
+
+                    if (showMessageBox)
+                    {
+                        exclusiveAccess.Text = "Completed!" + Environment.NewLine + "See the message box for further information.";
+                        using (var owner = Util.GetForegroundWindow())
+                        {
+                            MessageBox.Show(owner, "The following paths could not be found:" + Environment.NewLine + Environment.NewLine + Util.GetPathList(pathsError), "MultiArchiver", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+
+                    if (transaction.CanCommit)
+                    {
+                        transaction.CommitOnDispose();
+                    }
+                }
+            }
+
+
+        }
+
+        private void ListPathsOnClick(MenuSelectionProvider menuSelectionProvider)
+        {
+            string message = string.Format(CultureInfo.InvariantCulture, "Archive targets:\r\n{0}", Util.GetPathList(Util.LoadDirectories(Util.ReadProjectComment(_tiaPortal, searchPhrase))));
+            string title = "MultiArchiver: Paths info";
             using (Form owner = Util.GetForegroundWindow())
             {
                 MessageBox.Show(owner, message, title);
             }
         }
 
-        private MenuStatus DisplayStatus(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider)
+        private static MenuStatus InfoTextStatus(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider)
         {
-            return MenuStatus.Enabled;
+            var show = false;
+
+            foreach (IEngineeringObject engineeringObject in menuSelectionProvider.GetSelection())
+            {
+                if (!(engineeringObject.GetType() == menuSelectionProvider.GetSelection().First().GetType() && engineeringObject is Project))
+                {
+                    show = true;
+                    break;
+                }
+            }
+
+            return show ? MenuStatus.Disabled : MenuStatus.Hidden;
         }
+
+        public void WriteLog(string text)
+        {
+            if (_settings.Debug)
+            {
+                using (StreamWriter writer = new StreamWriter(new FileStream(_traceFilePath, FileMode.Append)))
+                {
+                    writer.WriteLine("{0} - {1}: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), projectName, text);
+                }
+            }
+        }
+
     }
 }

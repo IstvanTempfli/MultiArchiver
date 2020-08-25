@@ -1,28 +1,19 @@
 ﻿<PackageConfiguration xmlns="http://www.siemens.com/automation/Openness/AddIn/Publisher/V16">
-  <Author>&lt;Company name - Department&gt;</Author>
+  <Author>I. Tempfli</Author>
   <AddInVersion>V16</AddInVersion>
-  <Description>This is an example TIA Add-In for TIA Portal V16</Description>
+  <Description>This addin makes archives of the current project in multiple folders</Description>
 
   <Product>
-    <Name>TIA Add-In Example</Name>
-    <Id>tia_add_in_example</Id>
+    <Name>MultiArchiver</Name>
+    <Id>tia_add_in_multiarchiver</Id>
     <Version>1.0.0</Version>
   </Product>
 
   <FeatureAssembly>
     <AssemblyInfo>
-      <Assembly>bin\Release\AddInExample.dll</Assembly>
+      <Assembly>bin\Debug\MultiArchiver.dll</Assembly>
     </AssemblyInfo>
   </FeatureAssembly>
-
-  <!--<AdditionalAssemblies>
-    <AssemblyInfo>
-      <Assembly>...dll</Assembly>
-    </AssemblyInfo>
-    <AssemblyInfo>
-      <Assembly>...dll</Assembly>
-    </AssemblyInfo>
-  </AdditionalAssemblies>-->
 
   <!--<Certificates>
     <SigningCertificate>...</SigningCertificate>
@@ -37,6 +28,7 @@
       <TIA.ReadWrite/>
     </TIAPermissions>
     <SecurityPermissions>
+      <!--
       <System.Security.Permissions.SecurityPermission.UnmanagedCode/>
       <Siemens.Engineering.AddIn.Permissions.ProcessStartPermission/>
       <System.Net.WebPermission/>
@@ -59,6 +51,13 @@
       <System.Net.Mail.SmtpPermission/>
       <System.Security.Permissions.FileDialogPermission/>
       <System.Security.Permissions.UIPermission/>
+      -->
+
+      <System.Security.Permissions.FileIOPermission />
+      <System.Security.Permissions.EnvironmentPermission />
+      <System.Security.Permissions.UIPermission />
+      <System.Security.Permissions.SecurityPermission.UnmanagedCode />
+
     </SecurityPermissions>
   </RequiredPermissions>
 </PackageConfiguration>
