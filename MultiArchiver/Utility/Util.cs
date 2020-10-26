@@ -77,7 +77,8 @@ namespace MultiArchiver.Utility
             foreach (DirectoryInfo dir in directories)
             {
                 //paths += i.ToString() + ". " + dir.FullName + Environment.NewLine;
-                paths += dir.FullName + Environment.NewLine;
+                string exists = dir.Exists ? "Ok" : "Not Found";
+                paths += dir.FullName + " - " + exists + Environment.NewLine;
                 i++;
             }
             return paths;

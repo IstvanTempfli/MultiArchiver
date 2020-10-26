@@ -73,9 +73,11 @@ namespace MultiArchiver
 
             //Save Project
             project.Save();
+            WriteLog("Project Saved");
 
             using (var exclusiveAccess = _tiaPortal.ExclusiveAccess("Archiving to " + paths.Count + " folders..."))
             {
+                WriteLog("Archiving to " + paths.Count + " folders");
                 using (var transaction = exclusiveAccess.Transaction(project, "Archive project"))
                 {
 
@@ -89,7 +91,7 @@ namespace MultiArchiver
                             //Paths exists, begin arcive
                             if (_settings.MoveOldFiles)
                             {
-                                //TODO: Move old files to the "Archive" folder
+                                ArchiveFiles(project.Name, path, "Archiv");
                             }
 
                             if (pathsDone.Count == 0)
@@ -137,6 +139,40 @@ namespace MultiArchiver
             }
 
 
+        }
+
+        private void ArchiveFiles(string projectName, DirectoryInfo path, string archiveFolderName)
+        {
+            //Get list of older archives
+            string[] files = Directory.GetFiles(path.FullName, projectName + "*.zap16");
+
+            if (files.Length > 0)
+            {
+
+                try
+                {
+
+                    string target = Path.Combine(path.FullName, archiveFolderName);
+                    WriteLog("Archive - Target Dir: " + target);
+
+                    //Create subdirectory
+                    if (!Directory.Exists(target))
+                    {
+                        Directory.CreateDirectory(target);
+                        WriteLog("Archive - Archive dir created");
+                    }
+
+                    foreach (string file in files)
+                    {
+                        FileSystem.MoveFile(file, Path.Combine(target, Path.GetFileName(file)), UIOption.AllDialogs);
+                        WriteLog("Moving " + file + " to: " + target);
+                    }
+                }
+                catch (Exception e)
+                {
+                    WriteLog("Exception: " + e.ToString());
+                }
+            }
         }
 
         private void ListPathsOnClick(MenuSelectionProvider menuSelectionProvider)
