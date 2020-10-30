@@ -15,7 +15,7 @@ namespace MultiArchiver
     public class AddIn : ContextMenuAddIn
     {
         private readonly TiaPortal _tiaPortal;
-        private readonly Settings _settings;
+        private readonly AddinSettings _addinSettings;
 
         private string projectName;
 
@@ -38,7 +38,7 @@ namespace MultiArchiver
             var settingsDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TIA Add-Ins", assemblyName.Name, assemblyName.Version.ToString());
             var settingsDirectory = Directory.CreateDirectory(settingsDirectoryPath);
 
-            _settings = Settings.Load(settingsDirectory);
+            _addinSettings = AddinSettings.Load(settingsDirectory);
             //projectSettings = new ProjectSettings();
 
             WriteLog("Add-in constructed");
@@ -54,8 +54,8 @@ namespace MultiArchiver
 
             Submenu settingsSubmenu = addInRootSubmenu.Items.AddSubmenu("Settings"); //Settings submenu
             settingsSubmenu.Items.AddActionItem<IEngineeringObject>("List paths", ListPathsOnClick);
-            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Move old files to the Archive folder", _settings.MoveOldFilesOnClick, _settings.MoveOldFilesDisplayStatus);
-            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Debug mode", _settings.DebugOnClick, _settings.DebugDisplayStatus);
+            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Move old files to the Archive folder", _addinSettings.MoveOldFilesOnClick, _addinSettings.MoveOldFilesDisplayStatus);
+            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Debug mode", _addinSettings.DebugOnClick, _addinSettings.DebugDisplayStatus);
         }
 
         private void ArchiveOnClick(MenuSelectionProvider menuSelectionProvider)
@@ -88,7 +88,7 @@ namespace MultiArchiver
                         if (path.Exists)
                         {
                             //Paths exists, begin arcive
-                            if (_settings.MoveOldFiles)
+                            if (_addinSettings.MoveOldFiles)
                             {
                                 ArchiveFiles(project.Name, path, "Archiv");
                             }
@@ -163,7 +163,7 @@ namespace MultiArchiver
 
                     foreach (string file in files)
                     {
-                        FileSystem.MoveFile(file, Path.Combine(target, Path.GetFileName(file)), UIOption.AllDialogs);
+                        Util.MoveFiles(file, Path.Combine(target, Path.GetFileName(file)));
                         WriteLog("Moving " + file + " to: " + target);
                     }
                 }
@@ -202,7 +202,7 @@ namespace MultiArchiver
 
         public void WriteLog(string text)
         {
-            if (_settings.Debug)
+            if (_addinSettings.Debug)
             {
                 using (StreamWriter writer = new StreamWriter(new FileStream(_traceFilePath, FileMode.Append)))
                 {

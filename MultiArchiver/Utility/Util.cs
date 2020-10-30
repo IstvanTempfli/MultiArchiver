@@ -130,5 +130,21 @@ namespace MultiArchiver.Utility
                 MessageBox.Show(ex.Message);
             }
         }
+
+        public static void MoveFiles(string sSource, string sTarget)
+        {
+
+            try
+            {
+                _ShFile.wFunc = FO_Func.FO_MOVE;
+                _ShFile.pFrom = sSource + "\0\0";
+                _ShFile.pTo = sTarget + "\0\0";
+                SHFileOperation(ref _ShFile);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
     }
 }

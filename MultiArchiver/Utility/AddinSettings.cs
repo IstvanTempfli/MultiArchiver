@@ -10,37 +10,37 @@ namespace MultiArchiver.Utility
 {
     [XmlRoot]
     [XmlType]
-    public class Settings
+    public class AddinSettings
     {
         public bool MoveOldFiles { get; set; }
         public bool Debug { get; set; }
 
         private static string settingsFilePath;
 
-        static Settings()
+        static AddinSettings()
         {
 
         }
 
-        public Settings()
+        public AddinSettings()
         {
             MoveOldFiles = true;
             Debug = true;
         }
 
-        public static Settings Load(DirectoryInfo settingsDirectory)
+        public static AddinSettings Load(DirectoryInfo settingsDirectory)
         {
-            settingsFilePath = Path.Combine(settingsDirectory.FullName, string.Concat(typeof(Settings).Name, ".xml"));
+            settingsFilePath = Path.Combine(settingsDirectory.FullName, string.Concat(typeof(AddinSettings).Name, ".xml"));
 
             if (File.Exists(settingsFilePath) == false)
             {
-                return new Settings();
+                return new AddinSettings();
             }
 
             using (FileStream readStream = new FileStream(settingsFilePath, FileMode.Open))
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(Settings));
-                return serializer.Deserialize(readStream) as Settings;
+                XmlSerializer serializer = new XmlSerializer(typeof(AddinSettings));
+                return serializer.Deserialize(readStream) as AddinSettings;
             }
         }
 
@@ -48,7 +48,7 @@ namespace MultiArchiver.Utility
         {
             using (FileStream writeStream = new FileStream(settingsFilePath, FileMode.Create))
             {
-                XmlSerializer serializer = new XmlSerializer(typeof(Settings));
+                XmlSerializer serializer = new XmlSerializer(typeof(AddinSettings));
                 serializer.Serialize(writeStream, this);
             }
         }
