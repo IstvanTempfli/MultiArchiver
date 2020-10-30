@@ -9,7 +9,6 @@ using Siemens.Engineering.AddIn.Menu;
 using System.Linq;
 using System.Windows.Forms;
 using MultiArchiver.Utility;
-using Microsoft.VisualBasic.FileIO;
 
 namespace MultiArchiver
 {
@@ -107,7 +106,7 @@ namespace MultiArchiver
                                 exclusiveAccess.Text = "Copy archive to: " + path.FullName;
                                 //Copy from the first archive
                                 targetFile = Path.Combine(path.FullName, archiveName);
-                                FileSystem.CopyFile(sourceFile, targetFile, UIOption.AllDialogs);
+                                Util.CopyFiles(sourceFile, targetFile);
                                 WriteLog("Copy to: " + targetFile);
                             }
 
