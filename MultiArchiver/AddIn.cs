@@ -17,7 +17,7 @@ namespace MultiArchiver
         private readonly TiaPortal _tiaPortal;
         private readonly AddinSettings _addinSettings;
 
-        private string projectName;
+        private string projectName = String.Empty;
 
         //private ProjectSettings projectSettings;
 
@@ -28,7 +28,7 @@ namespace MultiArchiver
         {
             _tiaPortal = tiaPortal;
 
-            projectName = _tiaPortal.Projects.First().Name;
+
 
             var assemblyName = Assembly.GetCallingAssembly().GetName();
             var logDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TIA Add-Ins", assemblyName.Name, assemblyName.Version.ToString(), "Logs");
@@ -67,6 +67,8 @@ namespace MultiArchiver
             pathsError = new List<DirectoryInfo>();
 
             Project project = _tiaPortal.Projects.First();
+            projectName = project.Name;
+
 
             string archiveName = String.Format("{0}_{1}.zap16", project.Name, DateTime.Now.ToString("yyyyMMdd_HHmm"));
 
@@ -206,7 +208,7 @@ namespace MultiArchiver
             {
                 using (StreamWriter writer = new StreamWriter(new FileStream(_traceFilePath, FileMode.Append)))
                 {
-                    writer.WriteLine("{0} - {1}: {2}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), projectName, text);
+                    writer.WriteLine(projectName == String.Empty ? "{0}: {1}" : "{0} - {2}: {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), text, projectName);
                 }
             }
         }
