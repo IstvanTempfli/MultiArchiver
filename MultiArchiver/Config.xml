@@ -6,7 +6,7 @@
   <Product>
     <Name>MultiArchiver</Name>
     <Id>tia_add_in_multiarchiver</Id>
-    <Version>1.0.1</Version>
+    <Version>1.1</Version>
   </Product>
 
   <FeatureAssembly>
@@ -15,11 +15,11 @@
     </AssemblyInfo>
   </FeatureAssembly>
 
-  <AdditionalAssemblies>
+  <!--AdditionalAssemblies>
     <AssemblyInfo>
       <Assembly>bin\Debug\MultiArchiver.XmlSerializers.dll</Assembly>
     </AssemblyInfo>
-  </AdditionalAssemblies>
+  </AdditionalAssemblies-->
 
   <!--<Certificates>
     <SigningCertificate>...</SigningCertificate>
@@ -58,6 +58,8 @@
       <System.Security.Permissions.FileDialogPermission/>
       <System.Security.Permissions.UIPermission/>
       -->
+
+      <Siemens.Engineering.AddIn.Permissions.ProcessStartPermission/>
 
       <System.Security.Permissions.FileIOPermission />
       <System.Security.Permissions.EnvironmentPermission />
