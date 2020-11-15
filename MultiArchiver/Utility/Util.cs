@@ -46,8 +46,7 @@ namespace MultiArchiver.Utility
             return returnStr;
         }
 
-        [Obsolete]
-        public static List<DirectoryInfo> LoadDirectoriesFromComment(string textPaths)
+        public static List<DirectoryInfo> LoadDirectories(string textPaths)
         {
             List<DirectoryInfo> savePaths = new List<DirectoryInfo>();
 
@@ -60,49 +59,27 @@ namespace MultiArchiver.Utility
             return savePaths;
         }
 
-        public static List<DirectoryInfo> LoadDirectoriesFromFile(string filePath)
-        {
-            string line;
-            List<DirectoryInfo> savePaths = new List<DirectoryInfo>();
+        //public static string GetPathList(string text)
+        //{
+        //    string paths = "";
+        //    int i = 1;
+        //    foreach (DirectoryInfo dir in LoadDirectories(text))
+        //    {
+        //        paths = paths + i.ToString() + ". " + dir.FullName + "\r\n";
+        //        i++;
+        //    }
+        //    return paths;
+        //}
 
-            StreamReader file = new StreamReader(filePath);
-
-            while ((line = file.ReadLine()) != null)
-            {
-                savePaths.Add(new DirectoryInfo(line));
-            }
-            file.Close();
-
-            return savePaths;
-        }
-
-        public static string GetFolderListPath(TiaPortal tia)
-        {
-            Project project = tia.Projects.First();
-            var path = Path.Combine(project.Path.Directory.ToString(), "AdditionalFiles", "AddIn", "MultiArchiver");
-
-            Directory.CreateDirectory(path);
-            path = Path.Combine(path, "FolderList.txt");
-
-            if (!File.Exists(path))
-                File.Create(path);
-            return path;
-        }
-
-        public static string PrintPathList(List<DirectoryInfo> directories, bool option)
+        public static string GetPathList(List<DirectoryInfo> directories)
         {
             string paths = "";
             int i = 1;
             foreach (DirectoryInfo dir in directories)
             {
-                string exists;
-                if (option)
-                {
-                    exists = dir.Exists ? "Ok" : "Not Found";
-                    paths += dir.FullName + " - " + exists + Environment.NewLine;
-                }
-                else
-                    paths += dir.FullName + Environment.NewLine;
+                //paths += i.ToString() + ". " + dir.FullName + Environment.NewLine;
+                string exists = dir.Exists ? "Ok" : "Not Found";
+                paths += dir.FullName + " - " + exists + Environment.NewLine;
                 i++;
             }
             return paths;
@@ -140,6 +117,7 @@ namespace MultiArchiver.Utility
 
         public static void CopyFiles(string sSource, string sTarget)
         {
+
             try
             {
                 _ShFile.wFunc = FO_Func.FO_COPY;
@@ -155,6 +133,7 @@ namespace MultiArchiver.Utility
 
         public static void MoveFiles(string sSource, string sTarget)
         {
+
             try
             {
                 _ShFile.wFunc = FO_Func.FO_MOVE;
