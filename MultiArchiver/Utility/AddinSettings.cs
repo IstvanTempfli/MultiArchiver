@@ -14,6 +14,7 @@ namespace MultiArchiver.Utility
     {
         public bool MoveOldFiles { get; set; }
         public bool Debug { get; set; }
+        public bool DisplaySummary { get; set; }
 
         private static string settingsFilePath;
 
@@ -25,7 +26,8 @@ namespace MultiArchiver.Utility
         public AddinSettings()
         {
             MoveOldFiles = true;
-            Debug = true;
+            Debug = false;
+            DisplaySummary = false;
         }
 
         public static AddinSettings Load(DirectoryInfo settingsDirectory)
@@ -72,6 +74,17 @@ namespace MultiArchiver.Utility
         internal MenuStatus DebugDisplayStatus(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider, CheckBoxActionItemStyle checkBoxStyle)
         {
             checkBoxStyle.State = Debug == true ? CheckBoxState.Checked : CheckBoxState.Unchecked;
+            return MenuStatus.Enabled;
+        }
+
+        internal void ShowSummaryOnClick(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider)
+        {
+            DisplaySummary = !DisplaySummary;
+            Save();
+        }
+        internal MenuStatus ShowSummaryDisplayStatus(MenuSelectionProvider<IEngineeringObject> menuSelectionProvider, CheckBoxActionItemStyle checkBoxStyle)
+        {
+            checkBoxStyle.State = DisplaySummary == true ? CheckBoxState.Checked : CheckBoxState.Unchecked;
             return MenuStatus.Enabled;
         }
 
