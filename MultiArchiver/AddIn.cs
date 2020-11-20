@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.IO;
-using System.Diagnostics;
 using Siemens.Engineering;
 using Siemens.Engineering.AddIn.Menu;
+using Siemens.Engineering.AddIn.Utilities;
 using System.Linq;
 using System.Windows.Forms;
 using MultiArchiver.Utility;
@@ -19,16 +19,11 @@ namespace MultiArchiver
 
         private string projectName = String.Empty;
 
-        //private ProjectSettings projectSettings;
-
         private readonly string _traceFilePath;
-        private const string searchPhrase = "MultiArchiver:";
 
         public AddIn(TiaPortal tiaPortal) : base("MultiArchiver")
         {
             _tiaPortal = tiaPortal;
-
-
 
             var assemblyName = Assembly.GetCallingAssembly().GetName();
             var logDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TIA Add-Ins", assemblyName.Name, assemblyName.Version.ToString(), "Logs");
@@ -39,9 +34,8 @@ namespace MultiArchiver
             var settingsDirectory = Directory.CreateDirectory(settingsDirectoryPath);
 
             _addinSettings = AddinSettings.Load(settingsDirectory);
-            //projectSettings = new ProjectSettings();
 
-            WriteLog("Add-in constructed");
+            WriteLog("Add-in started");
         }
 
         protected override void BuildContextMenuItems(ContextMenuAddInRoot addInRootSubmenu)
@@ -51,24 +45,38 @@ namespace MultiArchiver
 
             addInRootSubmenu.Items.AddActionItem<Project>("Archive Project", ArchiveOnClick); //Main funtion
             addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Please select the project.", menuSelectionProvider => { }, InfoTextStatus);
+            addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("View Folders", ViewFoldersOnClick);
 
             Submenu settingsSubmenu = addInRootSubmenu.Items.AddSubmenu("Settings"); //Settings submenu
-            settingsSubmenu.Items.AddActionItem<IEngineeringObject>("List paths", ListPathsOnClick);
+            settingsSubmenu.Items.AddActionItem<IEngineeringObject>("Edit Folders", EditFoldersOnClick);
             settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Move old files to the Archive folder", _addinSettings.MoveOldFilesOnClick, _addinSettings.MoveOldFilesDisplayStatus);
+            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Show not found folders when completed", _addinSettings.ShowSummaryOnClick, _addinSettings.ShowSummaryDisplayStatus);
             settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Debug mode", _addinSettings.DebugOnClick, _addinSettings.DebugDisplayStatus);
         }
 
         private void ArchiveOnClick(MenuSelectionProvider menuSelectionProvider)
         {
-
             List<DirectoryInfo> paths, pathsDone, pathsError;
-            paths = Util.LoadDirectories(Util.ReadProjectComment(_tiaPortal, searchPhrase));
+
+            paths = Util.LoadDirectoriesFromFile(Util.GetFolderListPath(_tiaPortal));
+
+            if (paths.Count == 0)
+            {
+                string message = "No folders found.\nGo to Settings and select Edit Folders.";
+                string title = "MultiArchiver: Error";
+                using (Form owner = Util.GetForegroundWindow())
+                {
+                    MessageBox.Show(owner, message, title);
+                    WriteLog("No folders found");
+                }
+                return;
+            }
+
             pathsDone = new List<DirectoryInfo>();
             pathsError = new List<DirectoryInfo>();
 
             Project project = _tiaPortal.Projects.First();
             projectName = project.Name;
-
 
             string archiveName = String.Format("{0}_{1}.zap16", project.Name, DateTime.Now.ToString("yyyyMMdd_HHmm"));
 
@@ -117,7 +125,7 @@ namespace MultiArchiver
                         else
                         {
                             //not found/incorrect
-                            showMessageBox = true;
+                            showMessageBox = _addinSettings.DisplaySummary;
                             pathsError.Add(path);
                             WriteLog("Not found: " + path.FullName);
                         }
@@ -128,7 +136,7 @@ namespace MultiArchiver
                         exclusiveAccess.Text = "Completed!" + Environment.NewLine + "See the message box for further information.";
                         using (var owner = Util.GetForegroundWindow())
                         {
-                            MessageBox.Show(owner, "The following paths could not be found:" + Environment.NewLine + Environment.NewLine + Util.GetPathList(pathsError), "MultiArchiver", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show(owner, "The following paths could not be found:" + Environment.NewLine + Environment.NewLine + Util.PrintPathList(pathsError, false), "MultiArchiver", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
 
@@ -138,8 +146,6 @@ namespace MultiArchiver
                     }
                 }
             }
-
-
         }
 
         private void ArchiveFiles(string projectName, DirectoryInfo path, string archiveFolderName)
@@ -152,7 +158,6 @@ namespace MultiArchiver
 
                 try
                 {
-
                     string target = Path.Combine(path.FullName, archiveFolderName);
                     WriteLog("Archive - Target Dir: " + target);
 
@@ -176,13 +181,38 @@ namespace MultiArchiver
             }
         }
 
-        private void ListPathsOnClick(MenuSelectionProvider menuSelectionProvider)
+        private void ViewFoldersOnClick(MenuSelectionProvider menuSelectionProvider)
         {
-            string message = string.Format(CultureInfo.InvariantCulture, "Archive targets:\r\n{0}", Util.GetPathList(Util.LoadDirectories(Util.ReadProjectComment(_tiaPortal, searchPhrase))));
-            string title = "MultiArchiver: Paths info";
+            List<DirectoryInfo> paths = Util.LoadDirectoriesFromFile(Util.GetFolderListPath(_tiaPortal));
+            string message;
+
+            if (paths.Count == 0)
+            {
+                message = "No folders found.\nGo to Settings and select Edit Folders.";
+            }
+            else
+            {
+                message = string.Format(CultureInfo.InvariantCulture, "Archive targets:\r\n{0}", Util.PrintPathList(paths, true));
+            }
+
+            string title = "MultiArchiver: Archive targets";
             using (Form owner = Util.GetForegroundWindow())
             {
                 MessageBox.Show(owner, message, title);
+            }
+        }
+
+        private void EditFoldersOnClick(MenuSelectionProvider menuSelectionProvider)
+        {
+            try
+            {
+                string path = Util.GetFolderListPath(_tiaPortal);
+
+                Process.Start(path);
+            }
+            catch (Exception e)
+            {
+                WriteLog("Exception: " + e.ToString());
             }
         }
 
@@ -198,7 +228,6 @@ namespace MultiArchiver
                     break;
                 }
             }
-
             return show ? MenuStatus.Disabled : MenuStatus.Hidden;
         }
 
