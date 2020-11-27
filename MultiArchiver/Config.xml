@@ -35,8 +35,6 @@
     </TIAPermissions>
     <SecurityPermissions>
       <!--
-      <System.Security.Permissions.SecurityPermission.UnmanagedCode/>
-      <Siemens.Engineering.AddIn.Permissions.ProcessStartPermission/>
       <System.Net.WebPermission/>
       <System.Security.Permissions.MediaPermission/>
       <System.Security.Permissions.KeyContainerPermission/>
@@ -46,7 +44,6 @@
       <System.Net.NetworkInformation.NetworkInformationPermission/>
       <System.Security.Permissions.StorePermission/>
       <System.Configuration.ConfigurationPermission/>
-      <System.Security.Permissions.FileIOPermission/>
       <System.Diagnostics.EventLogPermission/>
       <System.Drawing.Printing.PrintingPermission/>
       <System.Security.Permissions.IsolatedStorageFilePermission/>
@@ -56,13 +53,13 @@
       <System.Security.Permissions.EnvironmentPermission/>
       <System.Net.Mail.SmtpPermission/>
       <System.Security.Permissions.FileDialogPermission/>
-      <System.Security.Permissions.UIPermission/>
       -->
 
       <System.Security.Permissions.FileIOPermission />
       <System.Security.Permissions.EnvironmentPermission />
       <System.Security.Permissions.UIPermission />
       <System.Security.Permissions.SecurityPermission.UnmanagedCode />
+      <Siemens.Engineering.AddIn.Permissions.ProcessStartPermission/>
 
     </SecurityPermissions>
   </RequiredPermissions>

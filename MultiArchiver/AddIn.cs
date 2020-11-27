@@ -25,33 +25,45 @@ namespace MultiArchiver
         {
             _tiaPortal = tiaPortal;
 
-            var assemblyName = Assembly.GetCallingAssembly().GetName();
-            var logDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TIA Add-Ins", assemblyName.Name, assemblyName.Version.ToString(), "Logs");
-            var logDirectory = Directory.CreateDirectory(logDirectoryPath);
-            _traceFilePath = Path.Combine(logDirectory.FullName, string.Concat(DateTime.Now.ToString("yyyyMMdd"), ".txt"));
+            try
+            {
+                var assemblyName = Assembly.GetCallingAssembly().GetName();
+                var logDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TIA Add-Ins", assemblyName.Name, assemblyName.Version.ToString(), "Logs");
+                var logDirectory = Directory.CreateDirectory(logDirectoryPath);
+                _traceFilePath = Path.Combine(logDirectory.FullName, string.Concat(DateTime.Now.ToString("yyyyMMdd"), ".txt"));
 
-            var settingsDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TIA Add-Ins", assemblyName.Name, assemblyName.Version.ToString());
-            var settingsDirectory = Directory.CreateDirectory(settingsDirectoryPath);
+                var settingsDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TIA Add-Ins", assemblyName.Name, assemblyName.Version.ToString());
+                var settingsDirectory = Directory.CreateDirectory(settingsDirectoryPath);
 
-            _addinSettings = AddinSettings.Load(settingsDirectory);
-
-            //WriteLog("Add-in started");
+                _addinSettings = AddinSettings.Load(settingsDirectory);
+            }
+            catch (Exception e)
+            {
+                WriteLog("Exception: " + e.ToString(), true);
+            }
+            WriteLog("Add-in started");
         }
 
         protected override void BuildContextMenuItems(ContextMenuAddInRoot addInRootSubmenu)
         {
 
-            //WriteLog("Building context menu");
+            WriteLog("Building context menu");
+            try
+            {
+                addInRootSubmenu.Items.AddActionItem<Project>("Archive Project", ArchiveOnClick); //Main funtion
+                addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Please select the project.", menuSelectionProvider => { }, InfoTextStatus);
+                addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("View Folders", ViewFoldersOnClick);
 
-            addInRootSubmenu.Items.AddActionItem<Project>("Archive Project", ArchiveOnClick); //Main funtion
-            addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Please select the project.", menuSelectionProvider => { }, InfoTextStatus);
-            addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("View Folders", ViewFoldersOnClick);
-
-            Submenu settingsSubmenu = addInRootSubmenu.Items.AddSubmenu("Settings"); //Settings submenu
-            settingsSubmenu.Items.AddActionItem<IEngineeringObject>("Edit Folders", EditFoldersOnClick);
-            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Move old files to the Archive folder", _addinSettings.MoveOldFilesOnClick, _addinSettings.MoveOldFilesDisplayStatus);
-            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Show not found folders when completed", _addinSettings.ShowSummaryOnClick, _addinSettings.ShowSummaryDisplayStatus);
-            settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Debug mode", _addinSettings.DebugOnClick, _addinSettings.DebugDisplayStatus);
+                Submenu settingsSubmenu = addInRootSubmenu.Items.AddSubmenu("Settings"); //Settings submenu
+                settingsSubmenu.Items.AddActionItem<IEngineeringObject>("Edit Folders", EditFoldersOnClick);
+                settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Move old files to the Archive folder", _addinSettings.MoveOldFilesOnClick, _addinSettings.MoveOldFilesDisplayStatus);
+                settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Show not found folders when completed", _addinSettings.ShowSummaryOnClick, _addinSettings.ShowSummaryDisplayStatus);
+                settingsSubmenu.Items.AddActionItemWithCheckBox<IEngineeringObject>("Debug mode", _addinSettings.DebugOnClick, _addinSettings.DebugDisplayStatus);
+            }
+            catch (Exception e)
+            {
+                WriteLog("Exception: " + e.ToString(), true);
+            }
         }
 
         private void ArchiveOnClick(MenuSelectionProvider menuSelectionProvider)
@@ -176,7 +188,7 @@ namespace MultiArchiver
                 }
                 catch (Exception e)
                 {
-                    WriteLog("Exception: " + e.ToString());
+                    WriteLog("Exception: " + e.ToString(), true);
                 }
             }
         }
@@ -212,7 +224,7 @@ namespace MultiArchiver
             }
             catch (Exception e)
             {
-                WriteLog("Exception: " + e.ToString());
+                WriteLog("Exception: " + e.ToString(), true);
             }
         }
 
@@ -231,9 +243,9 @@ namespace MultiArchiver
             return show ? MenuStatus.Disabled : MenuStatus.Hidden;
         }
 
-        public void WriteLog(string text)
+        public void WriteLog(string text, bool exception = false)
         {
-            if (_addinSettings.Debug)
+            if (_addinSettings.Debug || exception)
             {
                 using (StreamWriter writer = new StreamWriter(new FileStream(_traceFilePath, FileMode.Append)))
                 {
