@@ -35,13 +35,13 @@ namespace MultiArchiver
 
             _addinSettings = AddinSettings.Load(settingsDirectory);
 
-            WriteLog("Add-in started");
+            //WriteLog("Add-in started");
         }
 
         protected override void BuildContextMenuItems(ContextMenuAddInRoot addInRootSubmenu)
         {
 
-            WriteLog("Building context menu");
+            //WriteLog("Building context menu");
 
             addInRootSubmenu.Items.AddActionItem<Project>("Archive Project", ArchiveOnClick); //Main funtion
             addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Please select the project.", menuSelectionProvider => { }, InfoTextStatus);
@@ -113,7 +113,7 @@ namespace MultiArchiver
                             }
                             else
                             {
-                                exclusiveAccess.Text = "Copy archive to: " + path.FullName;
+                                exclusiveAccess.Text = "Copying archive to: " + path.FullName;
                                 //Copy from the first archive
                                 targetFile = Path.Combine(path.FullName, archiveName);
                                 Util.CopyFiles(sourceFile, targetFile);
