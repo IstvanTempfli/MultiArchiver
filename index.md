@@ -1,37 +1,47 @@
-## Welcome to GitHub Pages
+# MultiArchiver
+TIA Portal Add-In for archiving project to multiple folders
+# Installation
 
-You can use the [editor on GitHub](https://github.com/IstvanTempfli/MultiArchiver/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+Please copy the .addin-file into the "AddIns" folder of your TIA Portal installation path.
+Per default, it is C:\Program Files\Siemens\Automation\Portal V16\AddIns\
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+To activate add-ins, follow these steps:
 
-### Markdown
+1. Open the "Add-ins" task card.
+2. In the "Add-ins" pane, navigate to the add-in that you want to activate.
+3. In the shortcut menu of the add-in or in the "State" column, select the command "Activate".
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+![IMG1](Screenshots/activate.png)
 
-```markdown
-Syntax highlighted code block
+4. The add-in ask for permission. Select 'Yes'
 
-# Header 1
-## Header 2
-### Header 3
+![IMG4](Screenshots/permissions.png)
 
-- Bulleted
-- List
+More info about Add-ins:
+https://support.industry.siemens.com/cs/ww/en/view/109773506/128474251915
 
-1. Numbered
-2. List
+# Features
+## Archive Project 
 
-**Bold** and _Italic_ and `Code` text
+Arcives the current project to the saved paths.
 
-[Link](url) and ![Image](src)
-```
+![IMG3](Screenshots/addinMenu.png)
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+### View Folders
+Display in a dialog the target folders with comment "Ok" or "Not found"
 
-### Jekyll Themes
+# Settings
+* **Edit Folders** - Opens, using the operating systems default _*.txt_ editor (e.g. Edit) the _FolderList.txt_ file.
+Simply copy and paste the required paths into this file, save and close normally.
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/IstvanTempfli/MultiArchiver/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+![IMG2](Screenshots/folderList.png)
 
-### Support or Contact
+The file is saved into the project files, thus each TIA Project will have its own archive target list.
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+
+* **Move old files to the Archive folder** - Automatically moves the old archive files into an "Archive" folder in all target paths.
+* **Show not found folders when completed** - Displays a dialog at the end, listing the not reacheable folders.
+* **Debug** - Used for verbose logging
+
+The log file can be found under the following path:
+**%appdata%/TIA Add-Ins/MultiArchiver/&lt;Add-In Version&gt;/Logs**
