@@ -15,11 +15,11 @@
     </AssemblyInfo>
   </FeatureAssembly>
 
-  <!--AdditionalAssemblies>
+  <AdditionalAssemblies>
     <AssemblyInfo>
       <Assembly>bin\Debug\MultiArchiver.XmlSerializers.dll</Assembly>
     </AssemblyInfo>
-  </AdditionalAssemblies-->
+  </AdditionalAssemblies>
 
   <!--<Certificates>
     <SigningCertificate>...</SigningCertificate>
