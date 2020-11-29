@@ -41,7 +41,7 @@ The file is saved into the project files, thus each TIA Project will have its ow
 
 * **Move old files to the Archive folder** - Automatically moves the old archive files into an "Archive" folder in all target paths.
 * **Show not found folders when completed** - Displays a dialog at the end, listing the not reacheable folders.
-* **Debug** - Used for verbose logging
+* **Debug** - Activates verbose logging
 
-The log file can be found under the following path:
+The log files can be found under the following path:
 **%appdata%/TIA Add-Ins/MultiArchiver/&lt;Add-In Version&gt;/Logs**
