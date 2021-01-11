@@ -21,6 +21,13 @@ namespace MultiArchiver
 
         private readonly string _traceFilePath;
 
+        enum DebugLevel
+        {
+            Info,
+            Warning,
+            Error
+        }
+
         public AddIn(TiaPortal tiaPortal) : base("MultiArchiver")
         {
             _tiaPortal = tiaPortal;
@@ -39,19 +46,18 @@ namespace MultiArchiver
             }
             catch (Exception e)
             {
-                WriteLog("Exception: " + e.ToString(), true);
+                WriteLog("Exception: " + e.ToString(), DebugLevel.Error);
             }
-            WriteLog("Add-in started");
+            WriteLog("Add-in started", DebugLevel.Info);
         }
 
         protected override void BuildContextMenuItems(ContextMenuAddInRoot addInRootSubmenu)
         {
-
-            WriteLog("Building context menu");
+            WriteLog("Building context menu", DebugLevel.Info);
             try
             {
-                addInRootSubmenu.Items.AddActionItem<Project>("Archive Project", ArchiveOnClick); //Main funtion
-                addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Please select the project.", menuSelectionProvider => { }, InfoTextStatus);
+                addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Archive Project", ArchiveOnClick); //Main funtion
+                //addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("Please select the project.", menuSelectionProvider => { }, InfoTextStatus);
                 addInRootSubmenu.Items.AddActionItem<IEngineeringObject>("View Folders", ViewFoldersOnClick);
 
                 Submenu settingsSubmenu = addInRootSubmenu.Items.AddSubmenu("Settings"); //Settings submenu
@@ -62,7 +68,7 @@ namespace MultiArchiver
             }
             catch (Exception e)
             {
-                WriteLog("Exception: " + e.ToString(), true);
+                WriteLog("Exception: " + e.ToString(), DebugLevel.Error);
             }
         }
 
@@ -79,7 +85,7 @@ namespace MultiArchiver
                 using (Form owner = Util.GetForegroundWindow())
                 {
                     MessageBox.Show(owner, message, title);
-                    WriteLog("No folders found");
+                    WriteLog("No folders found", DebugLevel.Warning);
                 }
                 return;
             }
@@ -94,11 +100,11 @@ namespace MultiArchiver
 
             //Save Project
             project.Save();
-            WriteLog("Project Saved");
+            WriteLog("Project Saved", DebugLevel.Info);
 
             using (var exclusiveAccess = _tiaPortal.ExclusiveAccess("Archiving to " + paths.Count + " folders..."))
             {
-                WriteLog("Archiving to " + paths.Count + " folders");
+                WriteLog("Archiving to " + paths.Count + " folders", DebugLevel.Info);
                 using (var transaction = exclusiveAccess.Transaction(project, "Archive project"))
                 {
 
@@ -121,7 +127,7 @@ namespace MultiArchiver
                                 //Archive to the first path
                                 project.Archive(path, archiveName, ProjectArchivationMode.DiscardRestorableDataAndCompressed);
                                 sourceFile = Path.Combine(path.FullName, archiveName);
-                                WriteLog("Archive: " + sourceFile);
+                                WriteLog("Archive: " + sourceFile, DebugLevel.Info);
                             }
                             else
                             {
@@ -129,7 +135,7 @@ namespace MultiArchiver
                                 //Copy from the first archive
                                 targetFile = Path.Combine(path.FullName, archiveName);
                                 Util.CopyFiles(sourceFile, targetFile);
-                                WriteLog("Copy to: " + targetFile);
+                                WriteLog("Copy to: " + targetFile, DebugLevel.Info);
                             }
 
                             pathsDone.Add(path);
@@ -139,7 +145,7 @@ namespace MultiArchiver
                             //not found/incorrect
                             showMessageBox = _addinSettings.DisplaySummary;
                             pathsError.Add(path);
-                            WriteLog("Not found: " + path.FullName);
+                            WriteLog("Not found: " + path.FullName, DebugLevel.Warning);
                         }
                     }
 
@@ -171,24 +177,24 @@ namespace MultiArchiver
                 try
                 {
                     string target = Path.Combine(path.FullName, archiveFolderName);
-                    WriteLog("Archive - Target Dir: " + target);
+                    WriteLog("Archive - Target Dir: " + target, DebugLevel.Info);
 
                     //Create subdirectory
                     if (!Directory.Exists(target))
                     {
                         Directory.CreateDirectory(target);
-                        WriteLog("Archive - Archive dir created");
+                        WriteLog("Archive - Archive dir created", DebugLevel.Info);
                     }
 
                     foreach (string file in files)
                     {
                         Util.MoveFiles(file, Path.Combine(target, Path.GetFileName(file)));
-                        WriteLog("Moving " + file + " to: " + target);
+                        WriteLog("Moving " + file + " to: " + target, DebugLevel.Info);
                     }
                 }
                 catch (Exception e)
                 {
-                    WriteLog("Exception: " + e.ToString(), true);
+                    WriteLog("Exception: " + e.ToString(), DebugLevel.Error);
                 }
             }
         }
@@ -204,10 +210,10 @@ namespace MultiArchiver
             }
             else
             {
-                message = string.Format(CultureInfo.InvariantCulture, "Archive targets:\r\n{0}", Util.PrintPathList(paths, true));
+                message = string.Format(CultureInfo.InvariantCulture, "Archive Folders:\r\n{0}", Util.PrintPathList(paths, true));
             }
 
-            string title = "MultiArchiver: Archive targets";
+            string title = "MultiArchiver";
             using (Form owner = Util.GetForegroundWindow())
             {
                 MessageBox.Show(owner, message, title);
@@ -224,7 +230,7 @@ namespace MultiArchiver
             }
             catch (Exception e)
             {
-                WriteLog("Exception: " + e.ToString(), true);
+                WriteLog("Exception: " + e.ToString(), DebugLevel.Error);
             }
         }
 
@@ -243,13 +249,13 @@ namespace MultiArchiver
             return show ? MenuStatus.Disabled : MenuStatus.Hidden;
         }
 
-        public void WriteLog(string text, bool exception = false)
+        private void WriteLog(string text, DebugLevel level)
         {
-            if (_addinSettings.Debug || exception)
+            if (_addinSettings.Debug || level == DebugLevel.Error)
             {
                 using (StreamWriter writer = new StreamWriter(new FileStream(_traceFilePath, FileMode.Append)))
                 {
-                    writer.WriteLine(projectName == String.Empty ? "{0}: {1}" : "{0} - {2}: {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), text, projectName);
+                    writer.WriteLine(String.Format("{0} | {1} | {2} | {3}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), level.ToString().ToUpper(), projectName, text));
                 }
             }
         }
