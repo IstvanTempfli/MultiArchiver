@@ -123,19 +123,21 @@ namespace MultiArchiver
 
                             if (pathsDone.Count == 0)
                             {
-                                exclusiveAccess.Text = "Archiving to: " + path.FullName;
+                                exclusiveAccess.Text = "Archive: " + path.FullName;
                                 //Archive to the first path
                                 project.Archive(path, archiveName, ProjectArchivationMode.DiscardRestorableDataAndCompressed);
                                 sourceFile = Path.Combine(path.FullName, archiveName);
                                 WriteLog("Archive: " + sourceFile, DebugLevel.Info);
+                                exclusiveAccess.Text += " - Done";
                             }
                             else
                             {
-                                exclusiveAccess.Text = "Copying archive to: " + path.FullName;
+                                exclusiveAccess.Text += Environment.NewLine + "Copy to: " + path.FullName;
                                 //Copy from the first archive
                                 targetFile = Path.Combine(path.FullName, archiveName);
                                 Util.CopyFiles(sourceFile, targetFile);
                                 WriteLog("Copy to: " + targetFile, DebugLevel.Info);
+                                exclusiveAccess.Text += " - Done";
                             }
 
                             pathsDone.Add(path);
@@ -143,6 +145,7 @@ namespace MultiArchiver
                         else
                         {
                             //not found/incorrect
+                            exclusiveAccess.Text += Environment.NewLine + path.FullName + " - Not found";
                             showMessageBox = _addinSettings.DisplaySummary;
                             pathsError.Add(path);
                             WriteLog("Not found: " + path.FullName, DebugLevel.Warning);
@@ -151,7 +154,7 @@ namespace MultiArchiver
 
                     if (showMessageBox)
                     {
-                        exclusiveAccess.Text = "Completed!" + Environment.NewLine + "See the message box for further information.";
+                        exclusiveAccess.Text += Environment.NewLine + "Completed! See the message box for further information.";
                         using (var owner = Util.GetForegroundWindow())
                         {
                             MessageBox.Show(owner, "The following paths could not be found:" + Environment.NewLine + Environment.NewLine + Util.PrintPathList(pathsError, false), "MultiArchiver", MessageBoxButtons.OK, MessageBoxIcon.Information);

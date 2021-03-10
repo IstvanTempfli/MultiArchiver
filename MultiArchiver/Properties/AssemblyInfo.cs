@@ -8,7 +8,7 @@ using System.Security;
 
 [assembly: ComVisible(false)]
 [assembly: Guid("147e548f-7cd8-4d69-9194-8adcdb9d4d0a")]
-[assembly: AssemblyVersion("1.1.2")]
+[assembly: AssemblyVersion("1.1.3")]
 [assembly: AssemblyTitle("MultiArchiver")]
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
 
