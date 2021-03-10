@@ -79,10 +79,9 @@ namespace MultiArchiver.Utility
         public static string GetFolderListPath(TiaPortal tia)
         {
             Project project = tia.Projects.First();
-            var path = Path.Combine(project.Path.Directory.ToString(), "AdditionalFiles", "AddIn", "MultiArchiver");
+            var path = Path.Combine(project.Path.Directory.ToString(), "AdditionalFiles");
 
-            Directory.CreateDirectory(path);
-            path = Path.Combine(path, "FolderList.txt");
+            path = Path.Combine(path, "ProjectFolders.txt");
 
             if (!File.Exists(path))
                 File.Create(path);

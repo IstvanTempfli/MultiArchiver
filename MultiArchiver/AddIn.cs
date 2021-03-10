@@ -48,7 +48,7 @@ namespace MultiArchiver
             {
                 WriteLog("Exception: " + e.ToString(), DebugLevel.Error);
             }
-            WriteLog("Add-in started", DebugLevel.Info);
+            //WriteLog("Add-in started", DebugLevel.Info);
         }
 
         protected override void BuildContextMenuItems(ContextMenuAddInRoot addInRootSubmenu)
