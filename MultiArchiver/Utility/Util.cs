@@ -84,7 +84,7 @@ namespace MultiArchiver.Utility
             path = Path.Combine(path, "ProjectFolders.txt");
 
             if (!File.Exists(path))
-                File.Create(path);
+                File.Create(path).Dispose();
             return path;
         }
 
