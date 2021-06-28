@@ -118,12 +118,16 @@ namespace MultiArchiver
                             //Paths exists, begin arcive
                             if (_addinSettings.MoveOldFiles)
                             {
-                                ArchiveFiles(project.Name, path, "Archiv");
+                                exclusiveAccess.Text += Environment.NewLine + "Move old files: " + path.FullName;
+                                if (ArchiveFiles(project.Name, path, "Archiv") > 0)
+                                {
+                                    exclusiveAccess.Text += " - Done";
+                                }
                             }
 
                             if (pathsDone.Count == 0)
                             {
-                                exclusiveAccess.Text = "Archive: " + path.FullName;
+                                exclusiveAccess.Text += Environment.NewLine + "Archive: " + path.FullName;
                                 //Archive to the first path
                                 project.Archive(path, archiveName, ProjectArchivationMode.DiscardRestorableDataAndCompressed);
                                 sourceFile = Path.Combine(path.FullName, archiveName);
@@ -169,10 +173,11 @@ namespace MultiArchiver
             }
         }
 
-        private void ArchiveFiles(string projectName, DirectoryInfo path, string archiveFolderName)
+        private int ArchiveFiles(string projectName, DirectoryInfo path, string archiveFolderName)
         {
             //Get list of older archives
             string[] files = Directory.GetFiles(path.FullName, projectName + "*.zap16");
+            int nrFiles = 0;
 
             if (files.Length > 0)
             {
@@ -193,13 +198,17 @@ namespace MultiArchiver
                     {
                         Util.MoveFiles(file, Path.Combine(target, Path.GetFileName(file)));
                         WriteLog("Moving " + file + " to: " + target, DebugLevel.Info);
+                        nrFiles++;
                     }
                 }
                 catch (Exception e)
                 {
                     WriteLog("Exception: " + e.ToString(), DebugLevel.Error);
+                    nrFiles = -1;
                 }
             }
+
+            return nrFiles;
         }
 
         private void ViewFoldersOnClick(MenuSelectionProvider menuSelectionProvider)
