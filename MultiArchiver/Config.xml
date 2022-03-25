@@ -6,7 +6,7 @@
   <Product>
     <Name>MultiArchiver</Name>
     <Id>tia_add_in_multiarchiver</Id>
-    <Version>1.1.5</Version>
+    <Version>1.1.7</Version>
   </Product>
 
   <FeatureAssembly>

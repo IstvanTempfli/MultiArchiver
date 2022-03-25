@@ -15,6 +15,7 @@ namespace MultiArchiver.Utility
         public bool MoveOldFiles { get; set; }
         public bool Debug { get; set; }
         public bool DisplaySummary { get; set; }
+        public string ArchiveDirName { get; set; }
 
         private static string settingsFilePath;
 
@@ -28,6 +29,7 @@ namespace MultiArchiver.Utility
             MoveOldFiles = true;
             Debug = false;
             DisplaySummary = false;
+            ArchiveDirName = "Archive";
         }
 
         public static AddinSettings Load(DirectoryInfo settingsDirectory)

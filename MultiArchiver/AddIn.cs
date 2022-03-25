@@ -96,7 +96,10 @@ namespace MultiArchiver
             Project project = _tiaPortal.Projects.First();
             projectName = project.Name;
 
-            string archiveName = String.Format("{0}_{1}.zap16", project.Name, DateTime.Now.ToString("yyyyMMdd_HHmm"));
+            //Get path for determining TIA version
+            string pPath = project.Path.ToString();
+
+            string archiveName = String.Format("{0}_{1}.zap" + pPath.Substring(pPath.Length - 2), project.Name, DateTime.Now.ToString("yyyyMMdd_HHmm"));
 
             //Save Project
             project.Save();
@@ -119,7 +122,7 @@ namespace MultiArchiver
                             if (_addinSettings.MoveOldFiles)
                             {
                                 exclusiveAccess.Text += Environment.NewLine + "Move old files: " + path.FullName;
-                                if (ArchiveFiles(project.Name, path, "Archiv") > 0)
+                                if (ArchiveFiles(project.Name, path, _addinSettings.ArchiveDirName) > 0)
                                 {
                                     exclusiveAccess.Text += " - Done";
                                 }
@@ -176,7 +179,7 @@ namespace MultiArchiver
         private int ArchiveFiles(string projectName, DirectoryInfo path, string archiveFolderName)
         {
             //Get list of older archives
-            string[] files = Directory.GetFiles(path.FullName, projectName + "*.zap16");
+            string[] files = Directory.GetFiles(path.FullName, projectName + "*.zap??");
             int nrFiles = 0;
 
             if (files.Length > 0)
