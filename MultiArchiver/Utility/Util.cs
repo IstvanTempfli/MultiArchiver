@@ -65,7 +65,7 @@ namespace MultiArchiver.Utility
             string line;
             List<DirectoryInfo> savePaths = new List<DirectoryInfo>();
 
-            StreamReader file = new StreamReader(filePath);
+            StreamReader file = new StreamReader(filePath,System.Text.Encoding.Default, true);
 
             while ((line = file.ReadLine()) != null)
             {
